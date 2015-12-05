@@ -6,60 +6,85 @@ function Page(arr, limit) {
 }
 
 Page.prototype.next = function() {
-    var self = this;
-    if(self._currentPg + 1 >= parseInt(self._data.length / self._limit)) {
-        return self._current;
+    if(!this._limit) {
+        return this._data;
     }
-    self._currentPg++;
-    var lowerLimit = self._limit * self._currentPg;
-    var upperLimit = self._limit * (self._currentPg + 1) - 1;
-    self._current = self._data.filter(function(element, index) {
-        return withinLimits(lowerLimit, upperLimit, index);
-    });
-    return self._current;
+    if(this._currentPg + 1 > parseInt(this._data.length / this._limit)) {
+        return this._current;
+    }
+    this._currentPg++;
+    var lowerLimit = this._limit * this._currentPg;
+    var upperLimit;
+    if(!this._checkIfTooHigh(this._limit * (this._currentPg + 1) - 1)) {
+        upperLimit = this._limit * (this._currentPg + 1) - 1;
+    } else {
+        upperLimit = this._data.length - 1;
+    }
+    this._remapCurrent(upperLimit, lowerLimit);
+    return this._current;
 };
 
 Page.prototype.first = function() {
-    var self = this;
+    if(!this._limit) {
+        return this._data;
+    }
     var lowerLimit = 0;
-    var upperLimit = self._limit - 1;
-    self._currentPg = 0;
-    self._current = self._data.filter(function(element, index) {
-        return withinLimits(lowerLimit, upperLimit, index);
-    });
-    return self._current;
+    var upperLimit;
+    if(!this._checkIfTooHigh(this._limit - 1)) {
+        upperLimit = this._limit - 1;
+    } else {
+        upperLimit = this._data.length - 1
+    }
+    this._currentPg = 0;
+    this._remapCurrent(upperLimit, lowerLimit);
+    return this._current;
 };
 
 function withinLimits(lowerLimit, upperLimit, index) {
-    return lowerLimit <= index || index <= upperLimit;
+    return lowerLimit <= index && index <= upperLimit;
 }
 
+Page.prototype._remapCurrent = function(upperLimit, lowerLimit) {
+    var self = this;
+    self._current = self._data.filter(function(element, index) {
+        return withinLimits(lowerLimit, upperLimit, index);
+    })
+};
+
 Page.prototype._checkIfTooHigh = function(upperLimit) {
-    return self._data.length >= upperLimit;
+    return this._data.length - 1 < upperLimit;
 };
 
 Page.prototype.last = function() {
-    var self = this;
-    self._currentPg = parseInt(self._data.length / self._limit);
-    var lowerLimit = self._limit * self._currentPg;
-    var prelimUpperLimit = self._limit * (self._currentPg + 1) - 1;
-    var upperLimit =  prelimUpperLimit > self._data.length - 1 ? self._data.length - 1 : prelimUpperLimit;
-    self._current = self._data.filter(function(element, index) {
-        return withinLimits(lowerLimit, upperLimit, index);
-    });
-    return self._current;
+    if(!this._limit) {
+        return this._data;
+    }
+    this._currentPg = parseInt(this._data.length / this._limit);
+    var lowerLimit = this._limit * this._currentPg;
+    var prelimUpperLimit = this._limit * (this._currentPg + 1) - 1;
+    var upperLimit =  prelimUpperLimit > this._data.length - 1 ? this._data.length - 1 : prelimUpperLimit;
+    this._remapCurrent(upperLimit, lowerLimit);
+    return this._current;
 };
 
 Page.prototype.previous = function() {
-    var self = this;
-    if(self._currentPg === 0) {
-        return;
+    if(!this._limit) {
+        return this._data;
     }
-    self._currentPg--;
-    var lowerLimit = self._limit * self._currentPg;
-    var upperLimit = self._limit
-}
+    if(this._currentPg === 0) {
+        return this._current;
+    }
+    this._currentPg--;
+    var lowerLimit = this._limit * this._currentPg;
+    var upperLimit = this._limit * (this._currentPg + 1) - 1;
+    this._remapCurrent(upperLimit, lowerLimit);
+    return this._current;
+};
 
 Page.prototype.getCurrent = function() {
     return this._current;
+};
+
+Page.prototype.getCurrentPg = function() {
+    return this._currentPg;
 };
