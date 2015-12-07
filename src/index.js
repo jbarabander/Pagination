@@ -110,3 +110,16 @@ Page.prototype.getCurrent = function() {
 Page.prototype.getCurrentPg = function() {
     return this._currentPg;
 };
+
+Page.prototype.goToPage = function(num) {
+    if(num >= this._pages.length - 1) {
+        this._current = this._pages[this._pages.length - 1];
+    } else if(num <= 0) {
+        this._current = this._pages[0];
+    } else {
+        this._current = this._pages[num];
+    }
+    return this._current;
+}
+
+//next step - add ajax pagination
