@@ -17,6 +17,10 @@ Page.prototype.mapPages = function(limit) {
         }
         self._pages[page].push(element);
     })
+    if(this._currentPg > this._pages.length - 1) {
+        this._currentPg = this._pages.length - 1;
+    }
+    this._current = this._pages[this._currentPg];
 }
 
 Page.prototype.next = function() {
@@ -113,10 +117,13 @@ Page.prototype.getCurrentPg = function() {
 
 Page.prototype.goToPage = function(num) {
     if(num >= this._pages.length - 1) {
-        this._current = this._pages[this._pages.length - 1];
+        this._currentPg = this._pages.length - 1;
+        this._current = this._pages[this._currentPg];
     } else if(num <= 0) {
+        this._currentPg = 0;
         this._current = this._pages[0];
     } else {
+        this._currentPg = num;
         this._current = this._pages[num];
     }
     return this._current;
