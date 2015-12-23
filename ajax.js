@@ -24,12 +24,12 @@
 		return false;
  	}
 
- 	function queryStringParsing(params) {
+ 	function queryStringify(params) {
  		var stringParsed = '';
  		if(!params) return stringParsed;
  		var keys = Object.keys(params);
-	 		if(!keys.length) return stringParsed;
- 		stringParsed = '?' + keys[0] + '=' + params[keys[0]];
+	 	if(!keys.length) return stringParsed;
+ 		stringParsed = keys[0] + '=' + params[keys[0]];
  		for(var i = 1; i < keys.length; i++) {
  			stringParsed += '&' + keys[i] + '=' + params[keys[i]];
  		}
@@ -37,11 +37,11 @@
  	}
 
  	
- 	function get(url, options) {
+ 	function get(url, options, cb) {
  		var request = retrieveXHR();
  		request.onreadystatechange = function() {
  			if(request.readyState === 4) {
- 				request.responsetext;
+ 				cb(request.responsetext);
  			}
  		}
  		if(!request) {
