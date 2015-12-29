@@ -24,7 +24,7 @@
 		return false;
  	}
 
- 	function queryStringify(params) {
+	function queryStringify(params) {
  		var paramsArr = [];
  		if(!params) return '';
  		var keys = Object.keys(params);
@@ -39,7 +39,11 @@
  					stringifiedParam = queryStringify(currentParam);
  					break;
  				case 'string':
+ 					if(currentParam.indexOf('=') !== -1 || currentParam.indexOf('&') !== -1 ) {
+ 						stringifiedParam = 'internalUrl-' + currentParam;
+ 					} else {
  					stringifiedParam = currentParam;
+ 					}
  					break;
  				default:
  					stringifiedParam = currentParam;
@@ -55,12 +59,16 @@
  		var urlPortion = splitURI[0];
  		var queryPortion = splitURI[1];
  		function recursiveSerialize(string) {
+ 			if(string.slice(0, 12) === 'internalUrl-') {
+ 				return string.slice(12);
+ 			}
 	 		var splitQuery = string.split('&');
 	 		if(splitQuery.length === 1 && splitQuery[0].split('=').length === 1) {
 	 			return splitQuery[0];
 	 		}
 	 		var query = {};
 	 		for(var i = 0; i < splitQuery.length; i++) {
+	 			// console.log(splitQuery[i]);
 	 			var keyAndValue = splitQuery[i].split('=');
 	 			if(keyAndValue.length === 1) {
 	 				query[keyAndValue[0]] = options && options.strict === true ? null : '';
@@ -73,7 +81,6 @@
 	 	}
  		return recursiveSerialize(string);
  	}
-
  	function decodeEncChars(param) {
  		var str = '';
  		if(typeof param === 'string') {
