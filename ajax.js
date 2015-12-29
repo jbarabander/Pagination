@@ -50,6 +50,83 @@
  		return paramsArr.join('&');
  	}
 
+ 	function querySerialize(string, options) {
+ 		var splitURI = string.split('?');
+ 		var urlPortion = splitURI[0];
+ 		var queryPortion = splitURI[1];
+ 		function recursiveSerialize(string) {
+	 		var splitQuery = string.split('&');
+	 		if(splitQuery.length === 1 && splitQuery[0].split('=').length === 1) {
+	 			return splitQuery[0];
+	 		}
+	 		var query = {};
+	 		for(var i = 0; i < splitQuery.length; i++) {
+	 			var keyAndValue = splitQuery[i].split('=');
+	 			if(keyAndValue.length === 1) {
+	 				query[keyAndValue[0]] = options && options.strict === true ? null : '';
+	 				//possibly change to options.default instead of options.strict
+	 			} else {
+	 				query[keyAndValue[0]] = recursiveSerialize(decodeEncChars(keyAndValue[1]));
+	 			}
+	 		}
+	 		return query;
+	 	}
+ 		return recursiveSerialize(string);
+ 	}
+
+ 	function decodeEncChars(param) {
+ 		var str = '';
+ 		if(typeof param === 'string') {
+ 			var i = 0;
+ 			while(i < param.length) {
+ 				switch(param.slice(i, i + 3)) {
+ 					case '%20':
+ 						str += ' ';
+ 						i += 3;
+ 						break;
+ 					case '%21':
+ 						str += '!';
+ 						i += 3;
+ 						break;
+ 					case '%24':
+ 						str += '$';
+ 						i += 3;
+ 						break;
+ 					case '%25':
+ 						str += '%';
+ 						i += 3;
+ 						break;
+ 					case '%26':
+ 						str += '&';
+ 						i += 3;
+ 						break;
+ 					case "%27":
+ 						str += "'";
+ 						i += 3;
+ 					 	break;
+	 				case "%3D":
+	 					str += '=';
+	 					i += 3;
+	 					break;
+	 				case "%3F":
+	 					str += '?';
+	 					i += 3;
+	 					break;
+	 				default: 
+	 					str += param[i];
+	 					i++;
+	 					break;
+	 					//add more to switch case later	
+ 				}
+ 			}
+ 		}
+ 		return str;
+ 	}
+
+ 	// function nestedSplit(str, arr) {
+ 	// 	var splitArr = 
+ 	// }
+
  	// function recursivePortion(params) {
  	// 	if(!params) return '';
  	// 	var keys = Object.keys(param)
@@ -64,6 +141,7 @@
  			return encodedChars.indexOf(str) !== -1;
  		}
  	})();
+
  	function encodeParam(param) {
  		//POC - to be fleshed out with another function
  		var str = '';
@@ -80,11 +158,11 @@
  						str += '%24';
  						break;
  					case '%':
- 						if(checkForEncChars(param.slice(i, i + 3))) {
- 							str += '%';
- 						} else {
+ 						// if(checkForEncChars(param.slice(i, i + 3))) {
+ 						// 	str += '%';
+ 						// } else {
  							str += '%25';
- 						}
+ 						// }
  						break;
  					case '&':
  						str += '%26';
@@ -97,6 +175,7 @@
  						break;
  					case "?":
  						str += '%3F';
+ 						break;
  					default: 
  						str += param[i];
  						break;	
