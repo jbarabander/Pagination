@@ -24,30 +24,190 @@
 		return false;
  	}
 
- 	function queryStringParsing(params) {
- 		var stringParsed = '';
- 		if(!params) return stringParsed;
+	function queryStringify(params) {
+ 		var paramsArr = [];
+ 		if(!params) return '';
  		var keys = Object.keys(params);
-	 		if(!keys.length) return stringParsed;
- 		stringParsed = '?' + keys[0] + '=' + params[keys[0]];
- 		for(var i = 1; i < keys.length; i++) {
- 			stringParsed += '&' + keys[i] + '=' + params[keys[i]];
+	 	if(!keys.length) return '';
+ 		// stringParsed = keys[0] + '=' + params[keys[0]];
+ 		for(var i = 0; i < keys.length; i++) {
+ 			var currentKey = keys[i];
+ 			var currentParam = params[currentKey];
+ 			var stringifiedParam;
+ 			switch(typeof currentParam) {
+ 				case 'object':
+ 					stringifiedParam = queryStringify(currentParam);
+ 					break;
+ 				case 'string':
+ 					if(currentParam.indexOf('=') !== -1 || currentParam.indexOf('&') !== -1 ) {
+ 						stringifiedParam = 'internalUrl-' + currentParam;
+ 					} else {
+ 					stringifiedParam = currentParam;
+ 					}
+ 					break;
+ 				default:
+ 					stringifiedParam = currentParam;
+ 					break;
+ 			}
+ 			paramsArr.push(currentKey + '=' + encodeParam(stringifiedParam));
  		}
- 		return stringParsed;
+ 		return paramsArr.join('&');
  	}
 
+ 	function querySerialize(string, options) {
+ 		var splitURI = string.split('?');
+ 		var urlPortion = splitURI[0];
+ 		var queryPortion = splitURI[1];
+ 		function recursiveSerialize(string) {
+ 			if(string.slice(0, 12) === 'internalUrl-') {
+ 				return string.slice(12);
+ 			}
+	 		var splitQuery = string.split('&');
+	 		if(splitQuery.length === 1 && splitQuery[0].split('=').length === 1) {
+	 			return splitQuery[0];
+	 		}
+	 		var query = {};
+	 		for(var i = 0; i < splitQuery.length; i++) {
+	 			// console.log(splitQuery[i]);
+	 			var keyAndValue = splitQuery[i].split('=');
+	 			if(keyAndValue.length === 1) {
+	 				query[keyAndValue[0]] = options && options.strict === true ? null : '';
+	 				//possibly change to options.default instead of options.strict
+	 			} else {
+	 				query[keyAndValue[0]] = recursiveSerialize(decodeEncChars(keyAndValue[1]));
+	 			}
+	 		}
+	 		return query;
+	 	}
+ 		return recursiveSerialize(string);
+ 	}
+ 	function decodeEncChars(param) {
+ 		var str = '';
+ 		if(typeof param === 'string') {
+ 			var i = 0;
+ 			while(i < param.length) {
+ 				switch(param.slice(i, i + 3)) {
+ 					case '%20':
+ 						str += ' ';
+ 						i += 3;
+ 						break;
+ 					case '%21':
+ 						str += '!';
+ 						i += 3;
+ 						break;
+ 					case '%24':
+ 						str += '$';
+ 						i += 3;
+ 						break;
+ 					case '%25':
+ 						str += '%';
+ 						i += 3;
+ 						break;
+ 					case '%26':
+ 						str += '&';
+ 						i += 3;
+ 						break;
+ 					case "%27":
+ 						str += "'";
+ 						i += 3;
+ 					 	break;
+	 				case "%3D":
+	 					str += '=';
+	 					i += 3;
+	 					break;
+	 				case "%3F":
+	 					str += '?';
+	 					i += 3;
+	 					break;
+	 				default: 
+	 					str += param[i];
+	 					i++;
+	 					break;
+	 					//add more to switch case later	
+ 				}
+ 			}
+ 		}
+ 		return str;
+ 	}
+
+ 	// function nestedSplit(str, arr) {
+ 	// 	var splitArr = 
+ 	// }
+
+ 	// function recursivePortion(params) {
+ 	// 	if(!params) return '';
+ 	// 	var keys = Object.keys(param)
+ 	// }
+ 	var checkForEncChars = (function() {
+ 		var encodedChars = [
+ 			'%0A', '%0D', '%20', '%21', '%22', '%23', '%24', '%25', '%26', 
+ 			'%27', '%28', '%29', '%2A', '%2B', '%2C', '%2D', '%2E', '%2F', '%3A', 
+ 			'%3B', '%3C', '%3D', '%3F', '%40', '%5B', '%5D'
+ 		]
+ 		return function(str) {
+ 			return encodedChars.indexOf(str) !== -1;
+ 		}
+ 	})();
+
+ 	function encodeParam(param) {
+ 		//POC - to be fleshed out with another function
+ 		var str = '';
+ 		if(typeof param === 'string') {
+ 			for(var i = 0; i < param.length; i++) {
+ 				switch(param[i]) {
+ 					case ' ':
+ 						str += '%20';
+ 						break;
+ 					case '!':
+ 						str += '%21';
+ 						break;
+ 					case '$':
+ 						str += '%24';
+ 						break;
+ 					case '%':
+ 						// if(checkForEncChars(param.slice(i, i + 3))) {
+ 						// 	str += '%';
+ 						// } else {
+ 							str += '%25';
+ 						// }
+ 						break;
+ 					case '&':
+ 						str += '%26';
+ 						break;
+ 					case "'":
+ 						str += '%27';
+ 					 	break;
+ 					case "=":
+ 						str += '%3D';
+ 						break;
+ 					case "?":
+ 						str += '%3F';
+ 						break;
+ 					default: 
+ 						str += param[i];
+ 						break;	
+ 				}
+ 			}
+ 		}
+ 		return str;
+ 	}
  	
- 	function get(url, options) {
+ 	// function multipleReplace(str, arrOfSearchAndReplaces, arrOfReplaces) {
+ 	// 	while()
+ 	// }
+
+ 	
+ 	function get(url, options, cb) {
  		var request = retrieveXHR();
  		request.onreadystatechange = function() {
  			if(request.readyState === 4) {
- 				request.responsetext;
+ 				cb(request.responsetext);
  			}
  		}
  		if(!request) {
  			throw new Error("Sorry this browser does not support Ajax");
  		}
- 		request.open('GET', url + queryStringParsing(options.params))
+ 		request.open('GET', url + queryStringify(options.params))
  	}
 
  	function put(url, data, options) {
