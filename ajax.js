@@ -40,7 +40,7 @@
  					break;
  				case 'string':
  					if(currentParam.indexOf('=') !== -1 || currentParam.indexOf('&') !== -1 ) {
- 						stringifiedParam = 'internalUrl-' + currentParam;
+ 						stringifiedParam = '{{internalUrl}}-' + currentParam;
  					} else {
  					stringifiedParam = currentParam;
  					}
@@ -59,8 +59,8 @@
  		var urlPortion = splitURI[0];
  		var queryPortion = splitURI[1];
  		function recursiveSerialize(string) {
- 			if(string.slice(0, 12) === 'internalUrl-') {
- 				return string.slice(12);
+ 			if(string.slice(0, 16) === '{{internalUrl}}-') {
+ 				return string.slice(16);
  			}
 	 		var splitQuery = string.split('&');
 	 		if(splitQuery.length === 1 && splitQuery[0].split('=').length === 1) {
