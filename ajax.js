@@ -1,6 +1,4 @@
 (function(root) {
-	var ajax = {};
-	var xhr;
 
 	// function Ajax() {
 
@@ -93,15 +91,17 @@
  	
  	function get(url, options, cb) {
  		var request = retrieveXHR();
+		if(!request) {
+			throw new Error("Sorry this browser does not support Ajax!");
+		}
+		var requestUrl = options.params ? url + '?' + queryStringify(options.params) : url;
+		request.open('GET', requestUrl);
  		request.onreadystatechange = function() {
  			if(request.readyState === 4) {
- 				cb(request.responsetext);
+ 				cb(request.responseText);
  			}
- 		}
- 		if(!request) {
- 			throw new Error("Sorry this browser does not support Ajax");
- 		}
- 		request.open('GET', url + queryStringify(options.params))
+ 		};
+		request.send();
  	}
 
  	function put(url, data, options) {
@@ -112,10 +112,13 @@
 
  	}
 
- 	function delete(url, options) {
+ 	function del(url, options) {
 
  	}
 
+ 	var ajax = {
+ 		get: get
+ 	};
 
 	// var xhr = new root.XMLHttpRequest();
 	if(typeof define === 'function' && define.amd) {
